@@ -2,7 +2,7 @@
 这 O
 里 O
 恕 O
-弟 O
+弟 B-PER
 不 O
 恭 O
 之 O
