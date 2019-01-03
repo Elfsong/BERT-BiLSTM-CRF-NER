@@ -30,7 +30,9 @@ from lstm_crf_layer import BLSTM_CRF
 import tf_metrics
 import pickle
 
+# 定义CUDA设备
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+# 设定TF Log级别
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 flags = tf.flags
@@ -38,11 +40,11 @@ flags = tf.flags
 FLAGS = flags.FLAGS
 
 if os.name == 'nt':
-    bert_path = 'H:\迅雷下载\chinese_L-12_H-768_A-12\chinese_L-12_H-768_A-12'
-    root_path = r'C:\workspace\python\BERT-BiLSMT-CRF-NER'
+    bert_path = r'BERT_PATH'
+    root_path = r'ROOT_PATH'
 else:
-    bert_path = '/home/macan/ml/data/chinese_L-12_H-768_A-12/'
-    root_path = '/home/macan/ml/workspace/BERT-BiLSTM-CRF-NER'
+    bert_path = '/Users/elfsong/PycharmProjects/BERT-BiLSTM-CRF-NER/checkpoint'
+    root_path = '/Users/elfsong/PycharmProjects/BERT-BiLSTM-CRF-NER'
 
 flags.DEFINE_string(
     "data_dir", os.path.join(root_path, 'NERdata'),
@@ -55,7 +57,8 @@ flags.DEFINE_string(
 )
 
 flags.DEFINE_string(
-    "task_name", 'ner', "The name of the task to train."
+    "task_name", 'ner',
+    "The name of the task to train."
 )
 
 flags.DEFINE_string(
@@ -63,7 +66,6 @@ flags.DEFINE_string(
     "The output directory where the model checkpoints will be written."
 )
 
-## Other parameters
 flags.DEFINE_string(
     "init_checkpoint", os.path.join(bert_path, 'bert_model.ckpt'),
     "Initial checkpoint (usually from a pre-trained BERT model)."
@@ -79,53 +81,117 @@ flags.DEFINE_integer(
     "The maximum total input sequence length after WordPiece tokenization."
 )
 
-flags.DEFINE_boolean('clean', True, 'remove the files which created by last training')
-
-flags.DEFINE_bool("do_train", True, "Whether to run training."
+flags.DEFINE_boolean(
+    'clean', True,
+    'remove the files which created by last training'
 )
-flags.DEFINE_bool("use_tpu", False, "Whether to use TPU or GPU/CPU.")
 
-flags.DEFINE_bool("do_eval", True, "Whether to run eval on the dev set.")
+flags.DEFINE_bool(
+    "do_train", True,
+    "Whether to run training."
+)
 
-flags.DEFINE_bool("do_predict", True, "Whether to run the model in inference mode on the test set.")
+flags.DEFINE_bool(
+    "use_tpu", False,
+    "Whether to use TPU or GPU/CPU."
+)
 
-flags.DEFINE_integer("train_batch_size", 64, "Total batch size for training.")
+flags.DEFINE_bool(
+    "do_eval", True,
+    "Whether to run eval on the dev set."
+)
 
-flags.DEFINE_integer("eval_batch_size", 8, "Total batch size for eval.")
+flags.DEFINE_bool(
+    "do_predict", True,
+    "Whether to run the model in inference mode on the test set."
+)
 
-flags.DEFINE_integer("predict_batch_size", 8, "Total batch size for predict.")
+flags.DEFINE_integer(
+    "train_batch_size", 64,
+    "Total batch size for training."
+)
 
-flags.DEFINE_float("learning_rate", 5e-5, "The initial learning rate for Adam.")
+flags.DEFINE_integer(
+    "eval_batch_size", 8,
+    "Total batch size for eval."
+)
 
-flags.DEFINE_float("num_train_epochs", 15.0, "Total number of training epochs to perform.")
-flags.DEFINE_float('droupout_rate', 0.5, 'Dropout rate')
-flags.DEFINE_float('clip', 5, 'Gradient clip')
+flags.DEFINE_integer(
+    "predict_batch_size", 8,
+    "Total batch size for predict."
+)
+
+flags.DEFINE_float(
+    "learning_rate", 2e-5,
+    "The initial learning rate for Adam."
+)
+
+flags.DEFINE_float(
+    "num_train_epochs", 3.0,
+    "Total number of training epochs to perform."
+)
+
+flags.DEFINE_float(
+    'droupout_rate', 0.5,
+    'Dropout rate'
+)
+
+flags.DEFINE_float(
+    'clip', 5,
+    'Gradient clip'
+)
+
 flags.DEFINE_float(
     "warmup_proportion", 0.1,
     "Proportion of training to perform linear learning rate warmup for. "
-    "E.g., 0.1 = 10% of training.")
+    "E.g., 0.1 = 10% of training."
+)
 
-flags.DEFINE_integer("save_checkpoints_steps", 1000,
-                     "How often to save the model checkpoint.")
+flags.DEFINE_integer(
+    "save_checkpoints_steps", 1000,
+    "How often to save the model checkpoint."
+)
 
-flags.DEFINE_integer("iterations_per_loop", 1000,
-                     "How many steps to make in each estimator call.")
+flags.DEFINE_integer(
+    "iterations_per_loop", 1000,
+    "How many steps to make in each estimator call."
+)
 
-flags.DEFINE_string("vocab_file", os.path.join(bert_path, 'vocab.txt'),
-                    "The vocabulary file that the BERT model was trained on.")
+flags.DEFINE_string(
+    "vocab_file", os.path.join(bert_path, 'vocab.txt'),
+    "The vocabulary file that the BERT model was trained on."
+)
 
-tf.flags.DEFINE_string("master", None, "[Optional] TensorFlow master URL.")
+tf.flags.DEFINE_string(
+    "master", None,
+    "[Optional] TensorFlow master URL."
+)
+
 flags.DEFINE_integer(
     "num_tpu_cores", 8,
-    "Only used if `use_tpu` is True. Total number of TPU cores to use.")
-flags.DEFINE_string('data_config_path', os.path.join(root_path, 'data.conf'),
-                    'data config file, which save train and dev config')
-# lstm parame
-flags.DEFINE_integer('lstm_size', 128, 'size of lstm units')
-flags.DEFINE_integer('num_layers', 1, 'number of rnn layers, default is 1')
-flags.DEFINE_string('cell', 'lstm', 'which rnn cell used')
+    "Only used if `use_tpu` is True. Total number of TPU cores to use."
+)
 
+flags.DEFINE_string(
+    'data_config_path', os.path.join(root_path, 'data.conf'),
+    'data config file, which save train and dev config'
+)
 
+### LSTM Parameters ###
+flags.DEFINE_integer(
+    'lstm_size', 128,
+    'size of lstm units'
+)
+
+flags.DEFINE_integer(
+    'num_layers', 1,
+    'number of rnn layers, default is 1'
+)
+
+flags.DEFINE_string(
+    'cell', 'lstm',
+    'which rnn cell used'
+)
 
 
 class InputExample(object):
@@ -262,6 +328,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     # 1表示从1开始对label进行index化
     for (i, label) in enumerate(label_list, 1):
         label_map[label] = i
+
     # 保存label->index 的map
     with codecs.open(os.path.join(FLAGS.output_dir, 'label2id.pkl'), 'wb') as w:
         pickle.dump(label_map, w)
@@ -269,6 +336,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
     labellist = example.label.split(' ')
     tokens = []
     labels = []
+
     for i, word in enumerate(textlist):
         # 分词，如果是中文，就是分字
         token = tokenizer.tokenize(word)
@@ -279,7 +347,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
                 labels.append(label_1)
             else:  # 一般不会出现else
                 labels.append("X")
-    # tokens = tokenizer.tokenize(example.text)
+
     # 序列截断
     if len(tokens) >= max_seq_length - 1:
         tokens = tokens[0:(max_seq_length - 2)]  # -2 的原因是因为序列需要加一个句首和句尾标志
@@ -344,8 +412,7 @@ def convert_single_example(ex_index, example, label_list, max_seq_length, tokeni
 
 
 def filed_based_convert_examples_to_features(
-        examples, label_list, max_seq_length, tokenizer, output_file, mode=None
-):
+        examples, label_list, max_seq_length, tokenizer, output_file, mode=None):
     """
     将数据转化为TF_Record 结构，作为模型数据输入
     :param examples:  样本
@@ -357,24 +424,23 @@ def filed_based_convert_examples_to_features(
     :return:
     """
     writer = tf.python_io.TFRecordWriter(output_file)
-    # 遍历训练数据
+
     for (ex_index, example) in enumerate(examples):
-        if ex_index % 5000 == 0:
+        if ex_index % 1000 == 0:
             tf.logging.info("Writing example %d of %d" % (ex_index, len(examples)))
+
         # 对于每一个训练样本,
         feature = convert_single_example(ex_index, example, label_list, max_seq_length, tokenizer, mode)
 
         def create_int_feature(values):
-            f = tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
-            return f
+            return tf.train.Feature(int64_list=tf.train.Int64List(value=list(values)))
 
         features = collections.OrderedDict()
         features["input_ids"] = create_int_feature(feature.input_ids)
         features["input_mask"] = create_int_feature(feature.input_mask)
         features["segment_ids"] = create_int_feature(feature.segment_ids)
         features["label_ids"] = create_int_feature(feature.label_ids)
-        # features["label_mask"] = create_int_feature(feature.label_mask)
-        # tf.train.Example/Feature 是一种协议，方便序列化？？？
+
         tf_example = tf.train.Example(features=tf.train.Features(feature=features))
         writer.write(tf_example.SerializeToString())
 
@@ -385,8 +451,6 @@ def file_based_input_fn_builder(input_file, seq_length, is_training, drop_remain
         "input_mask": tf.FixedLenFeature([seq_length], tf.int64),
         "segment_ids": tf.FixedLenFeature([seq_length], tf.int64),
         "label_ids": tf.FixedLenFeature([seq_length], tf.int64),
-        # "label_ids":tf.VarLenFeature(tf.int64),
-        # "label_mask": tf.FixedLenFeature([seq_length], tf.int64),
     }
 
     def _decode_record(record, name_to_features):
@@ -428,6 +492,7 @@ def create_model(bert_config, is_training, input_ids, input_mask,
     :param use_one_hot_embeddings:
     :return:
     """
+
     # 使用数据加载BertModel,获取对应的字embedding
     model = modeling.BertModel(
         config=bert_config,
@@ -437,6 +502,7 @@ def create_model(bert_config, is_training, input_ids, input_mask,
         token_type_ids=segment_ids,
         use_one_hot_embeddings=use_one_hot_embeddings
     )
+
     # 获取对应的embedding 输入数据[batch_size, seq_length, embedding_size]
     embedding = model.get_sequence_output()
     max_seq_length = embedding.shape[1].value
@@ -447,8 +513,9 @@ def create_model(bert_config, is_training, input_ids, input_mask,
     blstm_crf = BLSTM_CRF(embedded_chars=embedding, hidden_unit=FLAGS.lstm_size, cell_type=FLAGS.cell, num_layers=FLAGS.num_layers,
                           dropout_rate=FLAGS.droupout_rate, initializers=initializers, num_labels=num_labels,
                           seq_length=max_seq_length, labels=labels, lengths=lengths, is_training=is_training)
-    rst = blstm_crf.add_blstm_crf_layer(crf_only=True)
-    return rst
+
+    result = blstm_crf.add_blstm_crf_layer(crf_only=True)
+    return result
 
 
 def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
@@ -468,9 +535,11 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
     """
 
     def model_fn(features, labels, mode, params):
-        tf.logging.info("*** Features ***")
+        tf.logging.info("**** Features ****")
+
         for name in sorted(features.keys()):
             tf.logging.info("  name = %s, shape = %s" % (name, features[name].shape))
+
         input_ids = features["input_ids"]
         input_mask = features["input_mask"]
         segment_ids = features["segment_ids"]
@@ -487,6 +556,7 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
 
         tvars = tf.trainable_variables()
         scaffold_fn = None
+
         # 加载BERT模型
         if init_checkpoint:
             (assignment_map, initialized_variable_names) = modeling.get_assignment_map_from_checkpoint(tvars,
@@ -503,47 +573,60 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
 
         tf.logging.info("**** Trainable Variables ****")
 
-        # 打印加载模型的参数
-#         for var in tvars:
-#             init_string = ""
-#             if var.name in initialized_variable_names:
-#                 init_string = ", *INIT_FROM_CKPT*"
-#             tf.logging.info("  name = %s, shape = %s%s", var.name, var.shape,
-#                             init_string)
         output_spec = None
+
         if mode == tf.estimator.ModeKeys.TRAIN:
             train_op = optimization.create_optimizer(
                 total_loss, learning_rate, num_train_steps, num_warmup_steps, use_tpu)
+
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
                 loss=total_loss,
                 train_op=train_op,
                 scaffold_fn=scaffold_fn)  # 钩子，这里用来将BERT中的参数作为我们模型的初始值
-        elif mode == tf.estimator.ModeKeys.EVAL:
-            # 针对NER ,进行了修改
-            def metric_fn(label_ids, logits, trans):
-                # 首先对结果进行维特比解码
-                # crf 解码
 
+        elif mode == tf.estimator.ModeKeys.EVAL:
+            def metric_fn(label_ids, logits, trans):
                 weight = tf.sequence_mask(FLAGS.max_seq_length)
-                precision = tf_metrics.precision(label_ids, pred_ids, num_labels, [2, 3, 4, 5, 6, 7], weight)
-                recall = tf_metrics.recall(label_ids, pred_ids, num_labels, [2, 3, 4, 5, 6, 7], weight)
-                f = tf_metrics.f1(label_ids, pred_ids, num_labels, [2, 3, 4, 5, 6, 7], weight)
+
+                precision = tf_metrics.precision(
+                    label_ids,
+                    pred_ids,
+                    num_labels,
+                    [2, 3, 4, 5, 6, 7],
+                    weight
+                )
+
+                recall = tf_metrics.recall(
+                    label_ids,
+                    pred_ids,
+                    num_labels,
+                    [2, 3, 4, 5, 6, 7],
+                    weight
+                )
+
+                f = tf_metrics.f1(
+                    label_ids,
+                    pred_ids,
+                    num_labels,
+                    [2, 3, 4, 5, 6, 7],
+                    weight
+                )
 
                 return {
                     "eval_precision": precision,
                     "eval_recall": recall,
-                    "eval_f": f,
-                    # "eval_loss": loss,
+                    "eval_f": f
                 }
 
             eval_metrics = (metric_fn, [label_ids, logits, trans])
-            # eval_metrics = (metric_fn, [label_ids, logits])
+
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
                 loss=total_loss,
                 eval_metrics=eval_metrics,
-                scaffold_fn=scaffold_fn)  #
+                scaffold_fn=scaffold_fn)
+
         else:
             output_spec = tf.contrib.tpu.TPUEstimatorSpec(
                 mode=mode,
@@ -555,11 +638,12 @@ def model_fn_builder(bert_config, num_labels, init_checkpoint, learning_rate,
     return model_fn
 
 
-def main(_):
+def main():
     tf.logging.set_verbosity(tf.logging.INFO)
     processors = {
         "ner": NerProcessor
     }
+
 #     if not FLAGS.do_train and not FLAGS.do_eval:
 #         raise ValueError("At least one of `do_train` or `do_eval` must be True.")
 
@@ -595,15 +679,18 @@ def main(_):
                 print(e)
                 print('pleace remove the files of output dir and data.conf')
                 exit(-1)
+
     task_name = FLAGS.task_name.lower()
     if task_name not in processors:
         raise ValueError("Task not found: %s" % (task_name))
+
     processor = processors[task_name]()
 
     label_list = processor.get_labels()
 
     tokenizer = tokenization.FullTokenizer(
         vocab_file=FLAGS.vocab_file, do_lower_case=FLAGS.do_lower_case)
+
     tpu_cluster_resolver = None
     if FLAGS.use_tpu and FLAGS.tpu_name:
         tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(
@@ -635,8 +722,7 @@ def main(_):
         # 加载训练数据
         if len(data_config) == 0:
             train_examples = processor.get_train_examples(FLAGS.data_dir)
-            num_train_steps = int(
-                len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
+            num_train_steps = int(len(train_examples) / FLAGS.train_batch_size * FLAGS.num_train_epochs)
             num_warmup_steps = int(num_train_steps * FLAGS.warmup_proportion)
 
             data_config['num_train_steps'] = num_train_steps
@@ -645,6 +731,7 @@ def main(_):
         else:
             num_train_steps = int(data_config['num_train_steps'])
             num_warmup_steps = int(data_config['num_warmup_steps'])
+
     # 返回的model_dn 是一个函数，其定义了模型，训练，评测方法，并且使用钩子参数，加载了BERT模型的参数进行了自己模型的参数初始化过程
     # tf 新的架构方法，通过定义model_fn 函数，定义模型，然后通过EstimatorAPI进行模型的其他工作，Es就可以控制模型的训练，预测，评估工作等。
     model_fn = model_fn_builder(
@@ -685,7 +772,9 @@ def main(_):
             seq_length=FLAGS.max_seq_length,
             is_training=True,
             drop_remainder=True)
+
         estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
+
     if FLAGS.do_eval:
         if data_config.get('eval.tf_record_path', '') == '':
             eval_examples = processor.get_dev_examples(FLAGS.data_dir)
@@ -706,13 +795,17 @@ def main(_):
         if FLAGS.use_tpu:
             eval_steps = int(num_eval_size / FLAGS.eval_batch_size)
         eval_drop_remainder = True if FLAGS.use_tpu else False
+
         eval_input_fn = file_based_input_fn_builder(
             input_file=eval_file,
             seq_length=FLAGS.max_seq_length,
             is_training=False,
             drop_remainder=eval_drop_remainder)
+
         result = estimator.evaluate(input_fn=eval_input_fn, steps=eval_steps)
+
         output_eval_file = os.path.join(FLAGS.output_dir, "eval_results.txt")
+
         with codecs.open(output_eval_file, "w", encoding='utf-8') as writer:
             tf.logging.info("***** Eval results *****")
             for key in sorted(result.keys()):
@@ -729,12 +822,15 @@ def main(_):
         if os.path.exists(token_path):
             os.remove(token_path)
 
+        # 读取Label to id模型
         with codecs.open(os.path.join(FLAGS.output_dir, 'label2id.pkl'), 'rb') as rf:
             label2id = pickle.load(rf)
             id2label = {value: key for key, value in label2id.items()}
 
         predict_examples = processor.get_test_examples(FLAGS.data_dir)
+
         predict_file = os.path.join(FLAGS.output_dir, "predict.tf_record")
+
         filed_based_convert_examples_to_features(predict_examples, label_list,
                                                  FLAGS.max_seq_length, tokenizer,
                                                  predict_file, mode="test")
@@ -742,26 +838,22 @@ def main(_):
         tf.logging.info("***** Running prediction*****")
         tf.logging.info("  Num examples = %d", len(predict_examples))
         tf.logging.info("  Batch size = %d", FLAGS.predict_batch_size)
+
         if FLAGS.use_tpu:
             # Warning: According to tpu_estimator.py Prediction on TPU is an
             # experimental feature and hence not supported here
             raise ValueError("Prediction in TPU not supported")
+
         predict_drop_remainder = True if FLAGS.use_tpu else False
+
         predict_input_fn = file_based_input_fn_builder(
             input_file=predict_file,
             seq_length=FLAGS.max_seq_length,
             is_training=False,
             drop_remainder=predict_drop_remainder)
 
-        # predicted_result = estimator.evaluate(input_fn=predict_input_fn)
-        # output_eval_file = os.path.join(FLAGS.output_dir, "predicted_results.txt")
-        # with codecs.open(output_eval_file, "w", encoding='utf-8') as writer:
-        #     tf.logging.info("***** Predict results *****")
-        #     for key in sorted(predicted_result.keys()):
-        #         tf.logging.info("  %s = %s", key, str(predicted_result[key]))
-        #         writer.write("%s = %s\n" % (key, str(predicted_result[key])))
-
         result = estimator.predict(input_fn=predict_input_fn)
+
         output_predict_file = os.path.join(FLAGS.output_dir, "label_test.txt")
 
         def result_to_pair(writer):
@@ -793,29 +885,14 @@ def main(_):
                         break
                     idx += 1
                 writer.write(line + '\n')
+
         # 将模型预测的结果和原始标签写入到文件中，以空格分开，使用conevel.py脚本来预测entity level 的结果并且输出
         with codecs.open(output_predict_file, 'w', encoding='utf-8') as writer:
             result_to_pair(writer)
-        from conlleval import return_report
-        eval_result = return_report(output_predict_file)
-        print(''.join(eval_result))
-        with codecs.open(os.path.join(FLAGS.output_dir, 'entity_level_predicted_result.txt'), 'a', encoding='utf-8') as fd:
-            fd.write(''.join(eval_result))
+
+        tf.logging.info("***** La~ la~ la~ Model running finished *****")
 
 
-def load_data():
-    processer = NerProcessor()
-    processer.get_labels()
-    example = processer.get_train_examples(FLAGS.data_dir)
-    print()
 if __name__ == "__main__":
-#     flags.mark_flag_as_required("data_dir")
-#     flags.mark_flag_as_required("task_name")
-#     flags.mark_flag_as_required("vocab_file")
-#     flags.mark_flag_as_required("bert_config_file")
-#     flags.mark_flag_as_required("output_dir")
-    # flags.FLAGS.set_default('do_train', False)
-    # flags.FLAGS.set_default('do_eval', False)
-    # flags.FLAGS.set_default('do_predict', True)
     tf.app.run()
-    # load_data()
+
